@@ -2,6 +2,7 @@
 import EpisodeBackground from "../components/EpisodeBackground.astro";
 import EpisodeHero from "../components/EpisodeHero.astro";
 import EpisodeRail from "../components/EpisodeRail.astro";
+import EpisodeSignupPrompt from "../components/EpisodeSignupPrompt.astro";
 import SeriesHeader from "../components/SeriesHeader.astro";
 import WatchDialog from "../components/WatchDialog.astro";
 import { getEpisodePath, publishedEpisodes, type Episode } from "../data/episodes";
@@ -162,6 +163,7 @@ const serializedStructuredData = JSON.stringify(structuredData).replace(/</g, "\
     </div>
 
     {videoIsReady && <WatchDialog episode={episode} />}
+    <EpisodeSignupPrompt episode={episode} />
 
     <script id="episode-data" type="application/json" set:html={JSON.stringify(episode)}></script>
     <script src="../scripts/experience.ts"></script>

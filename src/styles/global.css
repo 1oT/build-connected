@@ -730,6 +730,204 @@ a:focus-visible {
   opacity: 1;
 }
 
+.signup-prompt {
+  position: fixed;
+  top: 124px;
+  right: var(--page-inline);
+  z-index: 20;
+  width: min(380px, calc(100vw - 40px));
+  padding: 22px;
+  border-radius: 20px;
+  outline: 1px solid rgba(242, 244, 238, 0.16);
+  outline-offset: -1px;
+  background: rgba(14, 17, 16, 0.97);
+  color: var(--paper);
+  opacity: 0;
+  transform: translateY(12px) scale(0.985);
+  transform-origin: top right;
+  transition: opacity 180ms var(--ease-out-expo), transform 180ms var(--ease-out-expo);
+  will-change: opacity, transform;
+}
+
+.signup-prompt[data-state="open"] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition-duration: 240ms;
+}
+
+.signup-prompt__topline {
+  display: flex;
+  min-height: 44px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.signup-prompt__eyebrow {
+  margin: 4px 0 0;
+  color: var(--signal);
+  font: var(--type-primary-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.signup-prompt__close {
+  position: relative;
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(242, 244, 238, 0.08);
+  color: rgba(242, 244, 238, 0.72);
+  cursor: pointer;
+}
+
+.signup-prompt__close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.signup-prompt__close > span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, 48px);
+  height: max(100%, 48px);
+  transform: translate(-50%, -50%);
+}
+
+.signup-prompt__copy {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 20px;
+  gap: 8px;
+}
+
+.signup-prompt__copy h2,
+.signup-prompt__copy p,
+.signup-prompt__success p {
+  margin: 0;
+}
+
+.signup-prompt__copy h2 {
+  max-width: 24ch;
+  color: var(--paper);
+  font-size: 24px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.025em;
+}
+
+.signup-prompt__copy p,
+.signup-prompt__success > p:last-child {
+  max-width: 42ch;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 21px;
+}
+
+.signup-form,
+.signup-form__fields {
+  display: flex;
+  flex-direction: column;
+}
+
+.signup-form {
+  gap: 12px;
+}
+
+.signup-form__fields {
+  gap: 10px;
+}
+
+.signup-form label {
+  display: flex;
+  flex-direction: column;
+  color: rgba(242, 244, 238, 0.68);
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  line-height: 18px;
+  gap: 6px;
+}
+
+.signup-form input {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  outline: 1px solid rgba(242, 244, 238, 0.14);
+  outline-offset: -1px;
+  background: rgba(242, 244, 238, 0.06);
+  color: var(--paper);
+  font: var(--font-weight-normal) 14px/20px var(--font-sans);
+}
+
+.signup-form input::placeholder {
+  color: rgba(242, 244, 238, 0.38);
+}
+
+.signup-form input:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: -1px;
+}
+
+.signup-form__submit {
+  display: inline-flex;
+  width: 100%;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 22px;
+  background: var(--paper);
+  color: var(--ink);
+  font: var(--type-button-label);
+  cursor: pointer;
+}
+
+.signup-form__submit:disabled {
+  opacity: 0.64;
+  cursor: wait;
+}
+
+.signup-form__status,
+.signup-form__consent {
+  margin: 0;
+  font-size: 12px;
+  line-height: 17px;
+}
+
+.signup-form__status:not(:empty) {
+  color: #f0b9ad;
+}
+
+.signup-form__consent {
+  color: rgba(242, 244, 238, 0.48);
+}
+
+.signup-form__consent a {
+  color: rgba(242, 244, 238, 0.72);
+  text-underline-offset: 2px;
+}
+
+.signup-prompt__success {
+  padding: 10px 0 6px;
+}
+
+.signup-prompt__success-title {
+  padding-bottom: 8px;
+  color: var(--paper);
+  font-size: 22px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.02em;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .button--primary:hover {
     background: #ffffff;
@@ -742,6 +940,15 @@ a:focus-visible {
   a.rail-button:hover {
     background: rgba(242, 244, 238, 0.1);
   }
+
+  .signup-prompt__close:hover {
+    background: rgba(242, 244, 238, 0.14);
+    color: var(--paper);
+  }
+
+  .signup-form__submit:hover {
+    background: #ffffff;
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -750,7 +957,8 @@ a:focus-visible {
   }
 
   .button:active,
-  a.rail-button:active {
+  a.rail-button:active,
+  .signup-form__submit:active {
     transform: scale(0.97);
   }
 }
@@ -885,6 +1093,46 @@ a:focus-visible {
   .watch-modal {
     width: calc(100vw - 24px);
   }
+
+  .signup-prompt {
+    top: auto;
+    right: 12px;
+    bottom: 72px;
+    width: calc(100vw - 24px);
+    max-height: calc(100svh - 24px);
+    padding: 20px;
+    overflow-y: auto;
+    border-radius: 18px;
+    transform-origin: bottom center;
+  }
+
+  .signup-prompt__copy p,
+  .signup-prompt__success > p:last-child {
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .signup-form label {
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .signup-form input {
+    height: 46px;
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .signup-form__submit {
+    height: 48px;
+    font-size: 16px;
+  }
+
+  .signup-form__status,
+  .signup-form__consent {
+    font-size: 16px;
+    line-height: 22px;
+  }
 }
 
 @media (max-width: 560px) {
@@ -976,5 +1224,13 @@ a:focus-visible {
 
   .rail-button {
     transition-property: background-color, border-color, color;
+  }
+
+  .signup-prompt {
+    transition: none;
+  }
+
+  .signup-form__submit {
+    transition: none;
   }
 }

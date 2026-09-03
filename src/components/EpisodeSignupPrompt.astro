@@ -1,0 +1,93 @@
+---
+import type { Episode } from "../data/episodes";
+
+interface Props {
+  episode: Episode;
+}
+
+const { episode } = Astro.props;
+const defaultSubscribeUrl = "https://1oT.us14.list-manage.com/subscribe/post?u=f602351bcd7736125ff8bd684&id=207745e10c&f_id=00a747e5f0";
+const defaultTagIds = "40241699";
+const subscribeUrl = import.meta.env.PUBLIC_MAILCHIMP_SUBSCRIBE_URL?.trim() || defaultSubscribeUrl;
+const tagIds = import.meta.env.PUBLIC_MAILCHIMP_BUILD_CONNECTED_TAG_ID?.trim() || defaultTagIds;
+const isConfigured = Boolean(subscribeUrl && tagIds);
+const shouldRender = isConfigured && (episode.slug === "introduction" || !episode.videoAvailable);
+const trigger = episode.slug === "introduction" ? "teaser-close" : "unreleased-episode";
+const description = episode.slug === "introduction"
+  ? "Get a short note when a new Build Connected episode is ready to watch."
+  : `Get a short note when the ${episode.companyName} episode is ready to watch.`;
+---
+
+{shouldRender && (
+  <aside
+    class="signup-prompt"
+    data-signup-prompt
+    data-signup-trigger={trigger}
+    data-subscribe-url={subscribeUrl}
+    data-tag-ids={tagIds}
+    data-episode-slug={episode.slug}
+    hidden
+    aria-labelledby="signup-prompt-title"
+  >
+    <div class="signup-prompt__topline">
+      <p class="signup-prompt__eyebrow">New episode alerts</p>
+      <button
+        class="signup-prompt__close"
+        type="button"
+        data-close-signup
+        aria-label="Dismiss episode alerts"
+      >
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M3 3l10 10M13 3 3 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+        </svg>
+        <span aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <div class="signup-prompt__copy">
+      <h2 id="signup-prompt-title">Know when the story continues.</h2>
+      <p>{description}</p>
+    </div>
+
+    <form class="signup-form" data-signup-form novalidate>
+      <div class="signup-form__fields">
+        <label>
+          <span>Name</span>
+          <input
+            type="text"
+            name="NAME"
+            autocomplete="name"
+            placeholder="Your name"
+            required
+          />
+        </label>
+        <label>
+          <span>Email</span>
+          <input
+            type="email"
+            name="EMAIL"
+            autocomplete="email"
+            inputmode="email"
+            placeholder="you@company.com"
+            required
+          />
+        </label>
+      </div>
+
+      <button class="signup-form__submit" type="submit">
+        <span data-signup-submit-label>Notify me</span>
+      </button>
+
+      <p class="signup-form__status" data-signup-status aria-live="polite"></p>
+      <p class="signup-form__consent">
+        By signing up, you agree to receive episode updates from 1oT. Unsubscribe anytime.
+        <a href="https://www.1ot.com/privacy-policy" target="_blank" rel="noreferrer">Privacy policy</a>.
+      </p>
+    </form>
+
+    <div class="signup-prompt__success" data-signup-success hidden>
+      <p class="signup-prompt__success-title">You’re on the list.</p>
+      <p>We’ll let you know when the next story is ready.</p>
+    </div>
+  </aside>
+)}

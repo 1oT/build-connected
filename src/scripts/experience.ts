@@ -13,7 +13,20 @@ type Episode = {
 };
 
 type InteractionSource = "pointer" | "keyboard";
-type AnalyticsEventName = "episode_select" | "video_open" | "watch_on_youtube";
+type AnalyticsEventName =
+  | "episode_select"
+  | "video_open"
+  | "watch_on_youtube"
+  | "episode_alert_view"
+  | "episode_alert_dismiss"
+  | "episode_alert_submit"
+  | "episode_alert_success"
+  | "episode_alert_error";
+
+type MailchimpResponse = {
+  result?: "success" | "error";
+  msg?: string;
+};
 
 const EASE_OUT_EXPO = "cubic-bezier(0.19, 1, 0.22, 1)";
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -21,6 +34,9 @@ const saveData = Boolean((navigator as Navigator & {
   connection?: { saveData?: boolean };
 }).connection?.saveData);
 const warmedImages = new Map<string, Promise<void>>();
+const SIGNUP_DISMISSED_KEY = "build-connected:episode-alert-dismissed";
+const SIGNUP_SUBSCRIBED_KEY = "build-connected:episode-alert-subscribed";
+const SIGNUP_DISMISSAL_TTL = 7 * 24 * 60 * 60 * 1000;
 
 let pageController: AbortController | null = null;
 let pendingAmbientSlug: string | undefined;
@@ -44,6 +60,107 @@ function getEpisodeLinkParameters(link: HTMLElement) {
     episode_number: link.dataset.episodeNumber || "",
     company_name: link.dataset.companyName || "",
   };
+}
+
+function getStoredValue(key: string) {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function setStoredValue(key: string, value: string) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Storage can be unavailable in private or restricted browsing contexts.
+  }
+}
+
+function hasSuppressedSignup() {
+  if (getStoredValue(SIGNUP_SUBSCRIBED_KEY) === "true") return true;
+
+  const dismissedAt = Number(getStoredValue(SIGNUP_DISMISSED_KEY));
+  return Number.isFinite(dismissedAt) && Date.now() - dismissedAt < SIGNUP_DISMISSAL_TTL;
+}
+
+function mailchimpMessage(message: string | undefined) {
+  if (!message) return "We couldn’t add you right now. Please try again.";
+
+  const parsed = new DOMParser().parseFromString(message, "text/html");
+  return parsed.body.textContent?.replace(/^\d+\s*-\s*/, "").trim()
+    || "We couldn’t add you right now. Please try again.";
+}
+
+function subscribeToMailchimp(
+  subscribeUrl: string,
+  tagIds: string,
+  name: string,
+  email: string,
+  signal: AbortSignal,
+) {
+  return new Promise<MailchimpResponse>((resolve, reject) => {
+    const endpoint = new URL(subscribeUrl);
+    if (!endpoint.hostname.endsWith(".list-manage.com")) {
+      reject(new Error("Invalid Mailchimp subscribe URL."));
+      return;
+    }
+
+    endpoint.pathname = endpoint.pathname.replace(/\/post\/?$/, "/post-json");
+    if (!endpoint.pathname.endsWith("/post-json")) {
+      reject(new Error("Invalid Mailchimp subscribe URL."));
+      return;
+    }
+
+    const accountId = endpoint.searchParams.get("u");
+    const audienceId = endpoint.searchParams.get("id");
+    if (!accountId || !audienceId) {
+      reject(new Error("Incomplete Mailchimp subscribe URL."));
+      return;
+    }
+
+    const callbackName = `buildConnectedSignup${Date.now()}${Math.random().toString(16).slice(2)}`;
+    const signupWindow = window as unknown as Record<string, unknown>;
+    const script = document.createElement("script");
+    let timeout = 0;
+
+    const cleanup = () => {
+      window.clearTimeout(timeout);
+      script.remove();
+      delete signupWindow[callbackName];
+    };
+
+    signupWindow[callbackName] = (response: MailchimpResponse) => {
+      cleanup();
+      resolve(response);
+    };
+
+    endpoint.searchParams.set("c", callbackName);
+    endpoint.searchParams.set("EMAIL", email);
+    endpoint.searchParams.set("NAME", name);
+    endpoint.searchParams.set("tags", tagIds);
+    endpoint.searchParams.set("gdpr[19313]", "Y");
+    endpoint.searchParams.set(`b_${accountId}_${audienceId}`, "");
+    script.src = endpoint.href;
+    script.async = true;
+    script.addEventListener("error", () => {
+      cleanup();
+      reject(new Error("Mailchimp request failed."));
+    }, { once: true });
+
+    signal.addEventListener("abort", () => {
+      cleanup();
+      reject(new DOMException("Aborted", "AbortError"));
+    }, { once: true });
+
+    timeout = window.setTimeout(() => {
+      cleanup();
+      reject(new Error("Mailchimp request timed out."));
+    }, 10000);
+
+    document.head.append(script);
+  });
 }
 
 function waitForImage(image: HTMLImageElement) {
@@ -106,7 +223,7 @@ async function syncBackgroundPlayback() {
   const activeLayer = document.querySelector<HTMLElement>("[data-ambient-layer].is-active");
   const activeVideo = activeLayer?.querySelector<HTMLVideoElement>("[data-background-video]");
 
-  pauseAllBackgroundVideos(activeVideo);
+  pauseAllBackgroundVideos(activeVideo ?? undefined);
 
   const playbackAllowed = Boolean(
     activeVideo &&
@@ -257,10 +374,18 @@ function setupExperience() {
   const previousEpisodeLink = document.querySelector<HTMLAnchorElement>("[data-episode-previous]");
   const nextEpisodeLink = document.querySelector<HTMLAnchorElement>("[data-episode-next]");
   const episodeLinks = document.querySelectorAll<HTMLAnchorElement>("[data-episode-link]");
+  const signupPrompt = document.querySelector<HTMLElement>("[data-signup-prompt]");
+  const signupCloseButton = signupPrompt?.querySelector<HTMLButtonElement>("[data-close-signup]");
+  const signupForm = signupPrompt?.querySelector<HTMLFormElement>("[data-signup-form]");
+  const signupSubmitButton = signupForm?.querySelector<HTMLButtonElement>("[type='submit']");
+  const signupSubmitLabel = signupForm?.querySelector<HTMLElement>("[data-signup-submit-label]");
+  const signupStatus = signupForm?.querySelector<HTMLElement>("[data-signup-status]");
+  const signupSuccess = signupPrompt?.querySelector<HTMLElement>("[data-signup-success]");
 
   let dialogRevision = 0;
   let lastPlayTrigger: HTMLElement | null = null;
   let overlayAnimations: Animation[] = [];
+  let signupTimer = 0;
 
   ambientPlaybackSuppressed = false;
   ambientViewportVisible = true;
@@ -307,6 +432,38 @@ function setupExperience() {
   function cancelOverlayTransition(commitStyles: boolean) {
     stopAnimations(overlayAnimations, commitStyles);
     overlayAnimations = [];
+  }
+
+  function showSignupPrompt() {
+    if (!signupPrompt || !signupPrompt.hidden || hasSuppressedSignup()) return;
+
+    signupPrompt.hidden = false;
+    requestAnimationFrame(() => signupPrompt.dataset.state = "open");
+    pushAnalyticsEvent("episode_alert_view", {
+      episode_slug: episode.slug,
+      episode_number: episode.episodeNumber,
+      company_name: episode.companyName,
+      prompt_trigger: signupPrompt.dataset.signupTrigger || "",
+    });
+  }
+
+  function hideSignupPrompt({ remember = false, restoreFocus = false } = {}) {
+    if (!signupPrompt || signupPrompt.hidden) return;
+
+    if (remember) {
+      setStoredValue(SIGNUP_DISMISSED_KEY, String(Date.now()));
+      pushAnalyticsEvent("episode_alert_dismiss", {
+        episode_slug: episode.slug,
+        episode_number: episode.episodeNumber,
+        company_name: episode.companyName,
+      });
+    }
+
+    delete signupPrompt.dataset.state;
+    window.setTimeout(() => {
+      if (!signupPrompt.dataset.state) signupPrompt.hidden = true;
+    }, reduceMotion.matches ? 0 : 180);
+    if (restoreFocus) lastPlayTrigger?.focus({ preventScroll: true });
   }
 
   function openDialog(trigger: HTMLElement, source: InteractionSource) {
@@ -433,6 +590,65 @@ function setupExperience() {
     destroyPlayer();
     resumeAmbientMedia();
     lastPlayTrigger?.focus({ preventScroll: true });
+    if (episode.slug === "introduction" && !hasSuppressedSignup()) {
+      window.clearTimeout(signupTimer);
+      signupTimer = window.setTimeout(showSignupPrompt, 260);
+    }
+  }, { signal });
+
+  signupCloseButton?.addEventListener("click", () => {
+    hideSignupPrompt({ remember: true, restoreFocus: true });
+  }, { signal });
+
+  signupForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!signupForm.reportValidity() || !signupPrompt || !signupSubmitButton || !signupStatus) return;
+
+    const formData = new FormData(signupForm);
+    const name = String(formData.get("NAME") || "").trim();
+    const email = String(formData.get("EMAIL") || "").trim();
+    const subscribeUrl = signupPrompt.dataset.subscribeUrl || "";
+    const tagIds = signupPrompt.dataset.tagIds || "";
+
+    signupSubmitButton.disabled = true;
+    signupSubmitButton.setAttribute("aria-busy", "true");
+    if (signupSubmitLabel) signupSubmitLabel.textContent = "Signing up…";
+    signupStatus.textContent = "";
+    pushAnalyticsEvent("episode_alert_submit", {
+      episode_slug: episode.slug,
+      episode_number: episode.episodeNumber,
+      company_name: episode.companyName,
+    });
+
+    try {
+      const response = await subscribeToMailchimp(subscribeUrl, tagIds, name, email, signal);
+      const alreadySubscribed = response.msg?.toLowerCase().includes("already subscribed");
+      if (response.result !== "success" && !alreadySubscribed) {
+        throw new Error(mailchimpMessage(response.msg));
+      }
+
+      setStoredValue(SIGNUP_SUBSCRIBED_KEY, "true");
+      signupForm.hidden = true;
+      if (signupSuccess) signupSuccess.hidden = false;
+      pushAnalyticsEvent("episode_alert_success", {
+        episode_slug: episode.slug,
+        episode_number: episode.episodeNumber,
+        company_name: episode.companyName,
+      });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      signupStatus.textContent = error instanceof Error
+        ? error.message
+        : "We couldn’t add you right now. Please try again.";
+      signupSubmitButton.disabled = false;
+      signupSubmitButton.removeAttribute("aria-busy");
+      if (signupSubmitLabel) signupSubmitLabel.textContent = "Notify me";
+      pushAnalyticsEvent("episode_alert_error", {
+        episode_slug: episode.slug,
+        episode_number: episode.episodeNumber,
+        company_name: episode.companyName,
+      });
+    }
   }, { signal });
 
   episodeLinks.forEach((link) => {
@@ -468,6 +684,12 @@ function setupExperience() {
     const target = event.target as HTMLElement | null;
     const isTyping = Boolean(target?.closest("input, textarea, select, [contenteditable]:not([contenteditable='false'])"));
     if (event.defaultPrevented || isTyping || event.metaKey || event.ctrlKey || event.altKey) return;
+
+    if (signupPrompt?.dataset.state === "open" && event.key === "Escape") {
+      event.preventDefault();
+      hideSignupPrompt({ remember: true, restoreFocus: true });
+      return;
+    }
 
     if (dialog?.open) {
       if (event.key === "Escape") {
@@ -514,11 +736,16 @@ function setupExperience() {
   }, { signal });
 
   signal.addEventListener("abort", () => {
+    window.clearTimeout(signupTimer);
     ambientObserver?.disconnect();
     ++dialogRevision;
     cancelOverlayTransition(false);
     destroyPlayer();
   }, { once: true });
+
+  if (signupPrompt?.dataset.signupTrigger === "unreleased-episode" && !hasSuppressedSignup()) {
+    signupTimer = window.setTimeout(showSignupPrompt, 900);
+  }
 }
 
 document.addEventListener("astro:page-load", setupExperience);
