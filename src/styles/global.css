@@ -756,12 +756,32 @@ a:focus-visible {
 }
 
 @media (max-height: 800px) and (min-width: 901px) {
+  body {
+    overflow: auto;
+  }
+
+  .experience {
+    display: flex;
+    height: auto;
+    min-height: 100svh;
+    flex-direction: column;
+    padding: 136px 0 16px;
+    overflow: hidden;
+  }
+
   .series-header {
     top: 28px;
   }
 
+  .episode-stage {
+    position: relative;
+    inset: auto;
+    flex: 0 0 auto;
+  }
+
   .episode-copy {
-    top: 136px;
+    position: relative;
+    top: auto;
   }
 
   .episode-text {
@@ -775,7 +795,9 @@ a:focus-visible {
   }
 
   .episode-rail {
-    bottom: 16px;
+    position: relative;
+    bottom: auto;
+    margin-top: 36px;
   }
 }
 
