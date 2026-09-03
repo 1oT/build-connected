@@ -17,11 +17,15 @@ const { episode } = Astro.props;
 const isHomepage = episode.slug === "introduction";
 const siteUrl = new URL("/", Astro.site).href;
 const canonicalUrl = new URL(getEpisodePath(episode), Astro.site);
-const imageUrl = new URL(episode.posterImage, Astro.site);
+const posterImageUrl = new URL(episode.posterImage, Astro.site);
+const socialImageUrl = new URL(
+  isHomepage ? "/media/og-build-connected.jpg" : episode.posterImage,
+  Astro.site,
+);
 const title = episode.seoTitle;
 const description = episode.seoDescription;
 const imageAlt = isHomepage
-  ? "Build Connected — conversations behind connected products"
+  ? "Build Connected — conversations behind the connection"
   : `${episode.companyName} in ${episode.episodeNumber} of Build Connected`;
 const organizationId = "https://1ot.com/#organization";
 const websiteId = `${siteUrl}#website`;
@@ -58,7 +62,7 @@ const webpageStructuredData = {
   publisher: { "@id": organizationId },
   primaryImageOfPage: {
     "@type": "ImageObject",
-    url: imageUrl.href,
+    url: socialImageUrl.href,
     caption: imageAlt,
   },
   ...(!isHomepage && { datePublished: episode.publicationDateIso }),
@@ -70,7 +74,7 @@ const videoStructuredData = videoIsReady
       "@id": `${canonicalUrl.href}#video`,
       name: `${episode.companyName}: ${episode.episodeHeadline}`,
       description: episode.shortIntroduction,
-      thumbnailUrl: [imageUrl.href],
+      thumbnailUrl: [posterImageUrl.href],
       uploadDate: episode.publicationDateIso,
       duration: `PT${durationMinutes}M`,
       embedUrl: `https://www.youtube-nocookie.com/embed/${episode.youtubeId}`,
@@ -127,12 +131,19 @@ const serializedStructuredData = JSON.stringify(structuredData).replace(/</g, "\
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalUrl} />
-    <meta property="og:image" content={imageUrl} />
+    <meta property="og:image" content={socialImageUrl} />
     <meta property="og:image:alt" content={imageAlt} />
+    {isHomepage && (
+      <>
+        <meta property="og:image:type" content="image/jpeg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+      </>
+    )}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={imageUrl} />
+    <meta name="twitter:image" content={socialImageUrl} />
     <meta name="twitter:image:alt" content={imageAlt} />
     <link rel="canonical" href={canonicalUrl} />
     <link rel="preload" as="image" href={episode.posterImage} />
