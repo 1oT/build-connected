@@ -1,0 +1,21 @@
+---
+import ExperienceLayout from "../layouts/ExperienceLayout.astro";
+import { publishedEpisodes, type Episode } from "../data/episodes";
+
+export function getStaticPaths() {
+  return publishedEpisodes
+    .filter((episode) => episode.slug !== "introduction")
+    .map((episode) => ({
+      params: { slug: episode.slug },
+      props: { episode },
+    }));
+}
+
+interface Props {
+  episode: Episode;
+}
+
+const { episode } = Astro.props;
+---
+
+<ExperienceLayout episode={episode} />

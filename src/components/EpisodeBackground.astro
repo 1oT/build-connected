@@ -1,0 +1,52 @@
+---
+import type { Episode } from "../data/episodes";
+
+interface Props {
+  episodes: Episode[];
+  currentEpisode: Episode;
+}
+
+const { episodes, currentEpisode } = Astro.props;
+---
+
+<div
+  class="ambient-media"
+  aria-hidden="true"
+  data-ambient-media
+  transition:persist="ambient-media"
+>
+  {
+    episodes.map((episode) => (
+      <div
+        class:list={["ambient-layer", { "is-active": episode.slug === currentEpisode.slug }]}
+        data-ambient-layer
+        data-episode-slug={episode.slug}
+      >
+        <img
+          class="ambient-poster"
+          src={episode.posterImage}
+          alt=""
+          width="568"
+          height="320"
+          loading={episode.slug === currentEpisode.slug ? "eager" : "lazy"}
+          decoding="async"
+          fetchpriority={episode.slug === currentEpisode.slug ? "high" : "low"}
+        />
+        {episode.backgroundVideo && (
+          <video
+            class="ambient-video"
+            muted
+            loop
+            playsinline
+            preload="none"
+            poster={episode.posterImage}
+            aria-hidden="true"
+            tabindex="-1"
+            data-background-video
+            data-video-src={episode.backgroundVideo}
+          ></video>
+        )}
+      </div>
+    ))
+  }
+</div>

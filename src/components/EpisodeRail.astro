@@ -1,0 +1,95 @@
+---
+import { getEpisodePath, type Episode } from "../data/episodes";
+
+interface Props {
+  episodes: Episode[];
+  currentEpisode: Episode;
+}
+
+const { episodes, currentEpisode } = Astro.props;
+const currentIndex = episodes.findIndex((episode) => episode.slug === currentEpisode.slug);
+const previousEpisode = episodes[currentIndex - 1];
+const nextEpisode = episodes[currentIndex + 1];
+---
+
+<nav class="episode-rail" aria-label="Build Connected episodes" transition:name="episode-rail" transition:animate="none">
+  <div class="rail-controls">
+    {previousEpisode ? (
+      <a
+        class="rail-button"
+        href={getEpisodePath(previousEpisode)}
+        aria-label={`View previous episode: ${previousEpisode.companyName}`}
+        aria-keyshortcuts="ArrowLeft"
+        data-episode-link
+        data-episode-previous
+        data-episode-direction="back"
+        data-episode-slug={previousEpisode.slug}
+        data-episode-number={previousEpisode.episodeNumber}
+        data-company-name={previousEpisode.companyName}
+        data-poster-image={previousEpisode.posterImage}
+        data-astro-prefetch="load"
+      >
+        <svg viewBox="0 0 14 14" aria-hidden="true"><path d="m8.5 3-4 4 4 4" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      </a>
+    ) : (
+      <span class="rail-button is-disabled" aria-hidden="true">
+        <svg viewBox="0 0 14 14"><path d="m8.5 3-4 4 4 4" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      </span>
+    )}
+    {nextEpisode ? (
+      <a
+        class="rail-button"
+        href={getEpisodePath(nextEpisode)}
+        aria-label={`View next episode: ${nextEpisode.companyName}`}
+        aria-keyshortcuts="ArrowRight"
+        data-episode-link
+        data-episode-next
+        data-episode-direction="forward"
+        data-episode-slug={nextEpisode.slug}
+        data-episode-number={nextEpisode.episodeNumber}
+        data-company-name={nextEpisode.companyName}
+        data-poster-image={nextEpisode.posterImage}
+        data-astro-prefetch="load"
+      >
+        <svg viewBox="0 0 14 14" aria-hidden="true"><path d="m5.5 3 4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      </a>
+    ) : (
+      <span class="rail-button is-disabled" aria-hidden="true">
+        <svg viewBox="0 0 14 14"><path d="m5.5 3 4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      </span>
+    )}
+  </div>
+
+  <div class="episode-list" role="list">
+    {episodes.map((episode, episodeIndex) => (
+      <div class="episode-list-item" role="listitem">
+        <a
+          class:list={["episode-card", { "is-active": episode.slug === currentEpisode.slug }]}
+          href={getEpisodePath(episode)}
+          aria-current={episode.slug === currentEpisode.slug ? "page" : undefined}
+          data-episode-link
+          data-episode-direction={episodeIndex < currentIndex ? "back" : episodeIndex > currentIndex ? "forward" : "current"}
+          data-episode-slug={episode.slug}
+          data-episode-number={episode.episodeNumber}
+          data-company-name={episode.companyName}
+          data-poster-image={episode.posterImage}
+          data-astro-prefetch="hover"
+        >
+          <span class="episode-thumbnail">
+            <img
+              src={episode.thumbnail}
+              alt=""
+              width="192"
+              height="108"
+              loading={episode.slug === currentEpisode.slug ? "eager" : "lazy"}
+            />
+          </span>
+          <span class="episode-card-copy">
+            <span class="episode-card-number">{episode.episodeNumber}</span>
+            <span class="episode-card-company">{episode.companyName}</span>
+          </span>
+        </a>
+      </div>
+    ))}
+  </div>
+</nav>

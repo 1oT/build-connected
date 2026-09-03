@@ -1,0 +1,91 @@
+---
+import type { Episode } from "../data/episodes";
+
+interface Props {
+  episode: Episode;
+}
+
+const { episode } = Astro.props;
+const hasVideo = Boolean(episode.youtubeId && episode.videoAvailable);
+const episodeCopyTransition = {
+  forwards: {
+    old: {
+      name: "episode-copy-exit-forward",
+      duration: "120ms",
+      easing: "cubic-bezier(0.19, 1, 0.22, 1)",
+      fillMode: "both",
+    },
+    new: {
+      name: "episode-copy-enter-forward",
+      duration: "180ms",
+      easing: "cubic-bezier(0.19, 1, 0.22, 1)",
+      fillMode: "both",
+    },
+  },
+  backwards: {
+    old: {
+      name: "episode-copy-exit-back",
+      duration: "120ms",
+      easing: "cubic-bezier(0.19, 1, 0.22, 1)",
+      fillMode: "both",
+    },
+    new: {
+      name: "episode-copy-enter-back",
+      duration: "180ms",
+      easing: "cubic-bezier(0.19, 1, 0.22, 1)",
+      fillMode: "both",
+    },
+  },
+};
+---
+
+<main class="episode-stage" id="main-content">
+  <article
+    class="episode-copy"
+    aria-live="polite"
+    aria-atomic="true"
+    transition:name="episode-copy"
+    transition:animate={episodeCopyTransition}
+  >
+    <p class="episode-eyebrow" data-episode-number>{episode.episodeNumber}</p>
+    <div class="episode-text">
+      <h1 data-episode-headline>{episode.episodeHeadline}</h1>
+      <p class="episode-introduction" data-episode-introduction>{episode.shortIntroduction}</p>
+    </div>
+
+    <div class="episode-actions">
+      {hasVideo ? (
+        <button
+          class="button button--primary"
+          type="button"
+          data-play-button
+          aria-keyshortcuts="p"
+        >
+          <svg viewBox="0 0 14 14" aria-hidden="true">
+            <path d="M4 2.4 11 7l-7 4.6V2.4Z" fill="currentColor"></path>
+          </svg>
+          <span data-play-label>{episode.buttonLabel}</span>
+          <kbd aria-hidden="true">P</kbd>
+        </button>
+      ) : (
+        <div class="release-status">
+          <span class="release-status__label">Coming soon</span>
+          <span class="release-status__dot" aria-hidden="true"></span>
+          <span class="release-status__date">
+            Premieres <time datetime={episode.publicationDateIso}>{episode.publicationDate}</time>
+          </span>
+        </div>
+      )}
+    </div>
+
+    <div class="episode-meta">
+      {hasVideo && (
+        <>
+          <time datetime={episode.publicationDateIso || undefined} data-episode-date>{episode.publicationDate}</time>
+          <span class="meta-dot" aria-hidden="true"></span>
+        </>
+      )}
+      <span data-episode-duration>{episode.duration || "Duration to be announced"}</span>
+    </div>
+  </article>
+</main>

@@ -1,0 +1,43 @@
+---
+import type { Episode } from "../data/episodes";
+
+interface Props {
+  episode: Episode;
+}
+
+const { episode } = Astro.props;
+const youtubeUrl = episode.youtubeId
+  ? `https://www.youtube.com/watch?v=${encodeURIComponent(episode.youtubeId)}`
+  : "https://www.youtube.com";
+---
+
+<dialog class="watch-dialog" data-watch-dialog aria-labelledby="watch-title">
+  <div class="watch-modal">
+    <header class="watch-toolbar">
+      <div class="watch-context">
+        <div>
+          <h2 id="watch-title">{episode.episodeNumber}</h2>
+          <p><span>{episode.companyName}</span></p>
+        </div>
+      </div>
+
+      <div class="watch-actions">
+        <a class="button button--secondary watch-youtube" data-youtube-link href={youtubeUrl} target="_blank" rel="noreferrer">
+          <svg viewBox="0 0 16 12" aria-hidden="true">
+            <path d="M15.5 2.1C15.3 1.2 14.7.6 13.9.4 12.7 0 8 0 8 0S3.3 0 2.1.4C1.3.6.7 1.2.5 2.1.1 3.2 0 6 0 6s.1 2.8.5 3.9c.2.9.8 1.5 1.6 1.7C3.3 12 8 12 8 12s4.7 0 5.9-.4c.8-.2 1.4-.8 1.6-1.7.4-1.1.5-3.9.5-3.9s-.1-2.8-.5-3.9Z" fill="currentColor"></path>
+            <path d="m6.4 8.6 4.1-2.6-4.1-2.6v5.2Z" fill="#111"></path>
+          </svg>
+          <span>Watch on YouTube</span>
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2h6v6M10 2 3 9M8 10H2V4" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </a>
+        <button class="button button--secondary button--icon" type="button" data-close-dialog aria-label="Close video">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="youtube-frame" data-youtube-frame>
+      <img class="youtube-poster" data-youtube-poster src={episode.posterImage} alt="" />
+    </div>
+  </div>
+</dialog>

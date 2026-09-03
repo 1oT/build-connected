@@ -1,0 +1,99 @@
+- slug: introduction
+  status: published
+  copyFinal: true
+  episodeNumber: "Teaser"
+  companyName: Build Connected
+  episodeHeadline: Groundbreaking IoT companies, up close
+  shortIntroduction: Build Connected tells the story of IoT companies across Europe building hardware that redefines what’s possible — and the connectivity that makes it happen.
+  seoTitle: Build Connected | Real Stories from Europe’s IoT Innovators
+  seoDescription: Build Connected tells the story of IoT companies across Europe building hardware that redefines what’s possible — and the connectivity behind it.
+  publicationDate: Sep 3, 2026
+  publicationDateIso: 2026-09-03
+  duration: 1 min
+  youtubeId: HsV8BcBzDSo
+  videoAvailable: true
+  backgroundVideo: /media/episodes/teaser.mp4
+  posterImage: /media/introduction-poster.webp
+  thumbnail: /media/thumbnails/teaser.webp
+  companyUrl: https://1ot.com
+  buttonLabel: Play teaser
+
+- slug: sensoneo
+  status: published
+  copyFinal: true
+  episodeNumber: "Episode 01"
+  companyName: Sensoneo
+  episodeHeadline: Overflowing bins. Half-empty trucks. Routes planned on guesswork.
+  shortIntroduction: Sensoneo set out to change that — tracking waste in real time, optimizing routes, and cutting unnecessary trips. But keeping thousands of sensors connected in extreme conditions is not easy.
+  seoTitle: Build Connected | Waste collection made smart
+  seoDescription: Sensoneo is rethinking waste collection. The hard part? Keeping thousands of sensors connected through heat, cold, and everything in between. Discover how.
+  publicationDate: Sep 10, 2026
+  publicationDateIso: 2026-09-10
+  duration: 11 min
+  youtubeId: w3-vnAZ69pE
+  videoAvailable: false
+  backgroundVideo: /media/episodes/sensoneo.mp4
+  posterImage: /media/episodes/sensoneo.webp
+  thumbnail: /media/thumbnails/sensoneo.webp
+  companyUrl: https://sensoneo.com
+  buttonLabel: Play episode
+
+- slug: teledyne
+  status: published
+  copyFinal: true
+  episodeNumber: "Episode 02"
+  companyName: Teledyne
+  episodeHeadline: When innovation is only half the story
+  shortIntroduction: Teledyne is turning centuries of paper charts into live data. But innovation isn’t enough. In an industry shaped by tradition and strict compliance, what does it take to truly get on board?
+  seoTitle: Build Connected | Turning data into real-time action
+  seoDescription: Teledyne is turning centuries of paper charts into live data. But in an industry shaped by tradition and strict compliance, innovation isn’t enough.
+  publicationDate: Sep 17, 2026
+  publicationDateIso: 2026-09-17
+  duration: 10 min
+  youtubeId: RNL42_aqQrQ
+  videoAvailable: false
+  backgroundVideo: /media/episodes/chartworld.mp4
+  posterImage: /media/episodes/chartworld.webp
+  thumbnail: /media/thumbnails/teledyne.webp
+  companyUrl: https://www.chartworld.com
+  buttonLabel: Play episode
+
+- slug: hiber
+  status: published
+  copyFinal: true
+  episodeNumber: "Episode 03"
+  companyName: Hiber
+  episodeHeadline: Connecting the unconnected, and making it look easy nonetheless
+  shortIntroduction: Hiber turns the world’s most remote operations into real-time data streams. But how do you get it out when there’s barely enough bandwidth for a text and sensors face a decade of brutal conditions?
+  seoTitle: Build Connected | Connecting the unconnected
+  seoDescription: Hiber turns remote operations into real-time data. But how do you connect sensors when bandwidth is barely enough for a text message and conditions are brutal?
+  publicationDate: Sep 24, 2026
+  publicationDateIso: 2026-09-24
+  duration: 12 min
+  youtubeId: T26221nzi70
+  videoAvailable: false
+  backgroundVideo: /media/episodes/hiber.mp4
+  posterImage: /media/episodes/hiber.webp
+  thumbnail: /media/thumbnails/hiber.webp
+  companyUrl: https://hiber.global
+  buttonLabel: Play episode
+
+- slug: starship-technologies
+  status: published
+  copyFinal: true
+  episodeNumber: "Episode 04"
+  companyName: Starship Technologies
+  episodeHeadline: Revolutionising last-mile delivery, one robot at a time
+  shortIntroduction: Starship had no blueprint. Everything had to be built from scratch — from robots engineered to navigate crowded sidewalks unobtrusively to figuring out how to keep thousands of them connected.
+  seoTitle: Build Connected | Reinventing last-mile, one robot at a time
+  seoDescription: Starship had no blueprint. Everything had to be built from scratch — from robots that could blend into busy sidewalks to keeping thousands of them connected.
+  publicationDate: Oct 1, 2026
+  publicationDateIso: 2026-10-01
+  duration: 12 min
+  youtubeId: cuwN23R8SUU
+  videoAvailable: false
+  backgroundVideo: /media/episodes/starship-technologies.mp4
+  posterImage: /media/episodes/starship-technologies.webp
+  thumbnail: /media/thumbnails/starship.webp
+  companyUrl: https://www.starship.xyz
+  buttonLabel: Play episode
