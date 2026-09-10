@@ -1,5 +1,7 @@
 :root {
   color-scheme: dark;
+  --z-prompt: 20;
+  --z-skip-link: 100;
   --ink: #070908;
   --paper: #f2f4ee;
   --text-secondary: #c7cfcc;
@@ -84,7 +86,7 @@ html {
 body {
   min-width: 320px;
   margin: 0;
-  overflow: hidden;
+  overflow-x: clip;
   background: var(--ink);
   color: var(--paper);
   font-weight: var(--font-weight-normal);
@@ -113,7 +115,7 @@ button {
 
 button:focus-visible,
 a:focus-visible {
-  outline: 2px solid var(--brand);
+  outline: 2px solid var(--paper);
   outline-offset: 3px;
 }
 
@@ -125,7 +127,7 @@ a:focus-visible {
   position: fixed;
   top: 12px;
   left: 12px;
-  z-index: 100;
+  z-index: var(--z-skip-link);
   padding: 10px 14px;
   border-radius: 22px;
   background: var(--paper);
@@ -144,7 +146,7 @@ a:focus-visible {
   isolation: isolate;
   width: 100%;
   height: 100svh;
-  min-height: 720px;
+  min-height: 860px;
   overflow: hidden;
   background: var(--ink);
 }
@@ -245,6 +247,9 @@ a:focus-visible {
 }
 
 .brand-link {
+  display: flex;
+  height: 44px;
+  align-items: center;
   border-radius: 3px;
 }
 
@@ -512,7 +517,11 @@ a:focus-visible {
   --episode-card-active-width: 192px;
   display: flex;
   width: 100%;
-  height: 156px;
+  height: 166px;
+  padding: 4px;
+  margin: -4px;
+  scroll-padding-inline: 4px;
+  overscroll-behavior-x: contain;
   align-items: flex-start;
   overflow-x: auto;
   gap: 32px;
@@ -615,10 +624,10 @@ a:focus-visible {
 .watch-dialog {
   width: 100vw;
   max-width: none;
-  height: 100svh;
+  height: 100dvh;
   max-height: none;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   margin: 0;
-  padding: 0;
   border: 0;
   background: rgba(0, 0, 0, 0.9);
   color: var(--paper);
@@ -636,7 +645,8 @@ a:focus-visible {
 
 .watch-modal {
   display: flex;
-  width: min(1248px, calc(100vw - 48px));
+  width: min(1248px, 100%, calc((100dvh - 100px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 16 / 9));
+  margin: auto;
   flex-direction: column;
   gap: 12px;
 }
@@ -734,7 +744,11 @@ a:focus-visible {
   position: fixed;
   top: 124px;
   right: var(--page-inline);
-  z-index: 20;
+  z-index: var(--z-prompt);
+  max-height: calc(100dvh - 148px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  pointer-events: none;
   width: min(380px, calc(100vw - 40px));
   padding: 22px;
   border-radius: 20px;
@@ -746,10 +760,10 @@ a:focus-visible {
   transform: translateY(12px) scale(0.985);
   transform-origin: top right;
   transition: opacity 180ms var(--ease-out-expo), transform 180ms var(--ease-out-expo);
-  will-change: opacity, transform;
 }
 
 .signup-prompt[data-state="open"] {
+  pointer-events: auto;
   opacity: 1;
   transform: translateY(0) scale(1);
   transition-duration: 240ms;
@@ -774,8 +788,8 @@ a:focus-visible {
 .signup-prompt__close {
   position: relative;
   display: inline-flex;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
@@ -792,14 +806,6 @@ a:focus-visible {
   height: 16px;
 }
 
-.signup-prompt__close > span {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: max(100%, 48px);
-  height: max(100%, 48px);
-  transform: translate(-50%, -50%);
-}
 
 .signup-prompt__copy {
   display: flex;
@@ -872,7 +878,7 @@ a:focus-visible {
 }
 
 .signup-form input:focus-visible {
-  outline: 2px solid var(--brand);
+  outline: 2px solid var(--paper);
   outline-offset: -1px;
 }
 
@@ -946,7 +952,7 @@ a:focus-visible {
     color: var(--paper);
   }
 
-  .signup-form__submit:hover {
+  .signup-form__submit:not(:disabled):hover {
     background: #ffffff;
   }
 }
@@ -956,10 +962,11 @@ a:focus-visible {
     scroll-behavior: smooth;
   }
 
-  .button:active,
+  .button:not(:disabled):active,
   a.rail-button:active,
-  .signup-form__submit:active {
-    transform: scale(0.97);
+  .signup-prompt__close:active,
+  .signup-form__submit:not(:disabled):active {
+    transform: scale(0.96);
   }
 }
 
@@ -1019,7 +1026,7 @@ a:focus-visible {
     min-height: 100svh;
     height: auto;
     flex-direction: column;
-    padding: 28px 20px 32px;
+    padding: max(28px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(32px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
     overflow: hidden;
   }
 
@@ -1079,27 +1086,23 @@ a:focus-visible {
     position: relative;
     bottom: auto;
     left: auto;
-    width: calc(100vw - 20px);
+    width: 100%;
     height: auto;
     margin-top: 72px;
   }
 
   .episode-list {
-    height: 156px;
+    height: 166px;
     padding-right: 20px;
     gap: 16px;
   }
 
-  .watch-modal {
-    width: calc(100vw - 24px);
-  }
-
   .signup-prompt {
     top: auto;
-    right: 12px;
-    bottom: 72px;
-    width: calc(100vw - 24px);
-    max-height: calc(100svh - 24px);
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    width: min(380px, calc(100% - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     padding: 20px;
     overflow-y: auto;
     border-radius: 18px;
@@ -1233,4 +1236,68 @@ a:focus-visible {
   .signup-form__submit {
     transition: none;
   }
+}
+
+html:has(.watch-dialog[open]) {
+  overflow: hidden;
+}
+
+#main-content { scroll-margin-top: 24px; }
+
+.ambient-media,
+.cinematic-scrim,
+.youtube-poster {
+  pointer-events: none;
+  user-select: none;
+}
+
+.episode-eyebrow,
+.episode-meta,
+.episode-card-number,
+.release-status__date {
+  font-variant-numeric: tabular-nums;
+}
+
+.episode-card {
+  border-radius: 10px;
+}
+
+.episode-card:focus-visible .episode-thumbnail {
+  outline: 2px solid var(--paper);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .episode-card:hover .episode-thumbnail { outline-color: var(--paper); }
+  .episode-card:hover .episode-card-company { color: #fff; }
+}
+
+.signup-prompt__close,
+.signup-form__submit {
+  transition: background-color 150ms ease-out, color 150ms ease-out, transform 150ms ease-out;
+}
+
+.signup-form__status { min-height: 2lh; }
+.signup-form input[aria-invalid="true"] { box-shadow: inset 0 0 0 1px #f0b9ad; }
+.signup-form input[readonly] { opacity: 0.7; }
+.signup-prompt__success:focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; border-radius: 8px; }
+.watch-context > div { min-width: 0; }
+
+@media (pointer: coarse) {
+  .button--primary kbd { display: none; }
+  .button--primary { padding-right: 16px; }
+}
+
+@media (max-width: 560px) {
+  .release-status { flex-wrap: wrap; white-space: normal; padding-block: 12px; row-gap: 4px; }
+  .episode-actions { max-width: 100%; }
+  .series-tagline { white-space: normal; font-size: 8px; letter-spacing: 0.06em; }
+  .signup-form__consent { font-size: 13px; line-height: 19px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) { animation: none !important; }
+  .signup-prompt__close { transition: none; }
 }

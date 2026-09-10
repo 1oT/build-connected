@@ -27,6 +27,7 @@ const description = episode.slug === "introduction"
     data-tag-ids={tagIds}
     data-episode-slug={episode.slug}
     hidden
+    inert
     aria-labelledby="signup-prompt-title"
   >
     <div class="signup-prompt__topline">
@@ -40,7 +41,6 @@ const description = episode.slug === "introduction"
         <svg viewBox="0 0 16 16" aria-hidden="true">
           <path d="M3 3l10 10M13 3 3 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
         </svg>
-        <span aria-hidden="true"></span>
       </button>
     </div>
 
@@ -58,6 +58,7 @@ const description = episode.slug === "introduction"
             name="NAME"
             autocomplete="name"
             placeholder="Your name"
+            aria-describedby="signup-status"
             required
           />
         </label>
@@ -69,6 +70,7 @@ const description = episode.slug === "introduction"
             autocomplete="email"
             inputmode="email"
             placeholder="you@company.com"
+            aria-describedby="signup-status"
             required
           />
         </label>
@@ -78,14 +80,14 @@ const description = episode.slug === "introduction"
         <span data-signup-submit-label>Notify me</span>
       </button>
 
-      <p class="signup-form__status" data-signup-status aria-live="polite"></p>
+      <p class="signup-form__status" id="signup-status" data-signup-status role="status" aria-live="polite" aria-atomic="true"></p>
       <p class="signup-form__consent">
         By signing up, you agree to receive episode updates from 1oT. Unsubscribe anytime.
         <a href="https://www.1ot.com/privacy-policy" target="_blank" rel="noreferrer">Privacy policy</a>.
       </p>
     </form>
 
-    <div class="signup-prompt__success" data-signup-success hidden>
+    <div class="signup-prompt__success" data-signup-success tabindex="-1" role="status" hidden>
       <p class="signup-prompt__success-title">You’re on the list.</p>
       <p>We’ll let you know when the next story is ready.</p>
     </div>

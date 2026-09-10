@@ -435,9 +435,10 @@ function setupExperience() {
   }
 
   function showSignupPrompt() {
-    if (!signupPrompt || !signupPrompt.hidden || hasSuppressedSignup()) return;
+    if (!signupPrompt || !signupPrompt.hidden || dialog?.open || hasSuppressedSignup()) return;
 
     signupPrompt.hidden = false;
+    signupPrompt.inert = false;
     requestAnimationFrame(() => signupPrompt.dataset.state = "open");
     pushAnalyticsEvent("episode_alert_view", {
       episode_slug: episode.slug,
@@ -459,16 +460,24 @@ function setupExperience() {
       });
     }
 
+    const focusWasInside = signupPrompt.contains(document.activeElement);
+    signupPrompt.inert = true;
     delete signupPrompt.dataset.state;
     window.setTimeout(() => {
       if (!signupPrompt.dataset.state) signupPrompt.hidden = true;
     }, reduceMotion.matches ? 0 : 180);
-    if (restoreFocus) lastPlayTrigger?.focus({ preventScroll: true });
+    if (restoreFocus && focusWasInside) {
+      const destination = lastPlayTrigger ?? document.querySelector<HTMLElement>(".episode-card[aria-current=page]");
+      destination?.focus({ preventScroll: true });
+    }
   }
 
   function openDialog(trigger: HTMLElement, source: InteractionSource) {
     if (!episode.youtubeId || !episode.videoAvailable || !dialog || !watchModal || !youtubeFrame || !youtubePoster || !youtubeLink) return;
 
+    if (dialog.open) return;
+    window.clearTimeout(signupTimer);
+    hideSignupPrompt();
     const revision = ++dialogRevision;
     cancelOverlayTransition(false);
     lastPlayTrigger = trigger;
@@ -565,8 +574,8 @@ function setupExperience() {
     if (revision === dialogRevision && dialog.open) dialog.close();
   }
 
-  playButton?.addEventListener("click", () => openDialog(playButton, "pointer"), { signal });
-  closeButton?.addEventListener("click", () => void closeDialog("pointer"), { signal });
+  playButton?.addEventListener("click", (event) => openDialog(playButton, event.detail === 0 ? "keyboard" : "pointer"), { signal });
+  closeButton?.addEventListener("click", (event) => void closeDialog(event.detail === 0 ? "keyboard" : "pointer"), { signal });
   youtubeLink?.addEventListener("click", (event) => {
     pushAnalyticsEvent("watch_on_youtube", {
       episode_slug: episode.slug,
@@ -576,8 +585,12 @@ function setupExperience() {
     });
   }, { signal });
 
+  let backdropPressed = false;
+  dialog?.addEventListener("pointerdown", (event) => {
+    backdropPressed = event.target === dialog;
+  }, { signal });
   dialog?.addEventListener("click", (event) => {
-    if (event.target === dialog) void closeDialog("pointer");
+    if (backdropPressed && event.target === dialog) void closeDialog("pointer");
   }, { signal });
 
   dialog?.addEventListener("cancel", (event) => {
@@ -600,9 +613,30 @@ function setupExperience() {
     hideSignupPrompt({ remember: true, restoreFocus: true });
   }, { signal });
 
+  const signupInputs = Array.from(signupForm?.querySelectorAll<HTMLInputElement>("input") ?? []);
+  signupInputs.forEach((input) => {
+    input.addEventListener("input", () => {
+      input.removeAttribute("aria-invalid");
+      if (signupStatus) signupStatus.textContent = "";
+    }, { signal });
+  });
+
   signupForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (!signupForm.reportValidity() || !signupPrompt || !signupSubmitButton || !signupStatus) return;
+    if (!signupPrompt || !signupSubmitButton || !signupStatus || signupSubmitButton.disabled) return;
+    signupInputs.forEach((input) => {
+      input.value = input.value.trim();
+      if (input.validity.valid) input.removeAttribute("aria-invalid");
+      else input.setAttribute("aria-invalid", "true");
+    });
+    const invalidInput = signupInputs.find((input) => !input.validity.valid);
+    if (invalidInput) {
+      signupStatus.textContent = invalidInput.name === "NAME"
+        ? "Please enter your name."
+        : "Please enter a valid email address.";
+      invalidInput.focus();
+      return;
+    }
 
     const formData = new FormData(signupForm);
     const name = String(formData.get("NAME") || "").trim();
@@ -610,10 +644,11 @@ function setupExperience() {
     const subscribeUrl = signupPrompt.dataset.subscribeUrl || "";
     const tagIds = signupPrompt.dataset.tagIds || "";
 
+    signupInputs.forEach((input) => input.readOnly = true);
     signupSubmitButton.disabled = true;
     signupSubmitButton.setAttribute("aria-busy", "true");
     if (signupSubmitLabel) signupSubmitLabel.textContent = "Signing up…";
-    signupStatus.textContent = "";
+    signupStatus.textContent = "Adding you to episode alerts…";
     pushAnalyticsEvent("episode_alert_submit", {
       episode_slug: episode.slug,
       episode_number: episode.episodeNumber,
@@ -628,8 +663,14 @@ function setupExperience() {
       }
 
       setStoredValue(SIGNUP_SUBSCRIBED_KEY, "true");
+      const focusWasInForm = signupForm.contains(document.activeElement);
+      const formHeight = signupForm.getBoundingClientRect().height;
       signupForm.hidden = true;
-      if (signupSuccess) signupSuccess.hidden = false;
+      if (signupSuccess) {
+        signupSuccess.style.minHeight = `${formHeight}px`;
+        signupSuccess.hidden = false;
+        if (focusWasInForm) signupSuccess.focus({ preventScroll: true });
+      }
       pushAnalyticsEvent("episode_alert_success", {
         episode_slug: episode.slug,
         episode_number: episode.episodeNumber,
@@ -640,6 +681,7 @@ function setupExperience() {
       signupStatus.textContent = error instanceof Error
         ? error.message
         : "We couldn’t add you right now. Please try again.";
+      signupInputs.forEach((input) => input.readOnly = false);
       signupSubmitButton.disabled = false;
       signupSubmitButton.removeAttribute("aria-busy");
       if (signupSubmitLabel) signupSubmitLabel.textContent = "Notify me";
@@ -667,6 +709,16 @@ function setupExperience() {
     }
   });
 
+  const activeCard = document.querySelector<HTMLElement>(".episode-card[aria-current=page]");
+  const episodeList = document.querySelector<HTMLElement>(".episode-list");
+  if (activeCard && episodeList) {
+    const cardBounds = activeCard.getBoundingClientRect();
+    const listBounds = episodeList.getBoundingClientRect();
+    if (cardBounds.left < listBounds.left || cardBounds.right > listBounds.right) {
+      episodeList.scrollLeft += cardBounds.left - listBounds.left - (listBounds.width - cardBounds.width) / 2;
+    }
+  }
+
   void warmImage(episode.posterImage);
   void warmImage(previousEpisodeLink?.dataset.posterImage);
   void warmImage(nextEpisodeLink?.dataset.posterImage);
@@ -683,7 +735,7 @@ function setupExperience() {
   window.addEventListener("keydown", (event) => {
     const target = event.target as HTMLElement | null;
     const isTyping = Boolean(target?.closest("input, textarea, select, [contenteditable]:not([contenteditable='false'])"));
-    if (event.defaultPrevented || isTyping || event.metaKey || event.ctrlKey || event.altKey) return;
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
 
     if (signupPrompt?.dataset.state === "open" && event.key === "Escape") {
       event.preventDefault();
@@ -698,6 +750,8 @@ function setupExperience() {
       }
       return;
     }
+
+    if (isTyping || event.shiftKey) return;
 
     const destination = event.key === "ArrowLeft"
       ? previousEpisodeLink
