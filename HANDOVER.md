@@ -131,9 +131,9 @@ Current release schedule:
 | --- | --- | --- | --- |
 | Teaser | `/` | 2026-09-03 | `HsV8BcBzDSo` |
 | Episode 01 — Sensoneo | `/sensoneo/` | 2026-09-10 | `w3-vnAZ69pE` |
-| Episode 02 — Teledyne | `/teledyne/` | 2026-09-17 | `RNL42_aqQrQ` |
+| Episode 02 — Teledyne | `/teledyne/` | 2026-09-17 | `A6GcGkXx_aA` |
 | Episode 03 — Hiber | `/hiber/` | 2026-09-24 | `T26221nzi70` |
-| Episode 04 — Starship Technologies | `/starship-technologies/` | 2026-10-01 | `cuwN23R8SUU` |
+| Episode 04 — Starship Technologies | `/starship-technologies/` | 2026-10-01 | `88wejHsCais` |
 
 ## 6. Rollback
 
