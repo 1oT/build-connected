@@ -51,7 +51,7 @@
   publicationDateIso: 2026-09-17
   duration: 10 min
   youtubeId: A6GcGkXx_aA
-  videoAvailable: false
+  videoAvailable: true
   backgroundVideo: /media/episodes/chartworld.mp4
   posterImage: /media/episodes/chartworld.webp
   thumbnail: /media/thumbnails/teledyne.webp
