@@ -91,7 +91,7 @@
   publicationDateIso: 2026-10-01
   duration: 12 min
   youtubeId: 88wejHsCais
-  videoAvailable: false
+  videoAvailable: true
   backgroundVideo: /media/episodes/starship-technologies.mp4
   posterImage: /media/episodes/starship-technologies.webp
   thumbnail: /media/thumbnails/starship.webp
